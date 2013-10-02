@@ -5,6 +5,20 @@ var masterWindow = require('/ui/xui').createWindow({
     backgroundColor : '#AAA'
 });
 
+var tableData = [];
+
+for (var i = 1; i < 25; i++) {
+    tableData.push({
+        title : "Row " + i
+    });
+}
+
+var table = Ti.UI.createTableView({
+    data : tableData
+});
+
+masterWindow.add(table);
+
 var detailWindow = require('/ui/xui').createWindow({
     title : 'detail window',
     backgroundColor : 'white'
