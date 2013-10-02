@@ -4,6 +4,7 @@ orientations.PORTRAIT = 'port';
 
 var MASTER_WINDOW_WIDTH = '320dp';
 var MASTER_NAVWINDOW_WIDTH = '321dp';
+var ANIMATION_DURATION = 250;
 
 exports.createSplitWindow = function(params) {
 
@@ -23,7 +24,8 @@ exports.createSplitWindow = function(params) {
         masterWindow.left = '-' + MASTER_WINDOW_WIDTH;
         masterWindow.visible = true;
         masterWindow.animate({
-            left : 0
+            left : 0,
+            duration : ANIMATION_DURATION
         }, function() {
             if (me.myOrientation === orientations.LANDSCAPE) {
                 me.masterShowingLandscape = true;
@@ -43,7 +45,8 @@ exports.createSplitWindow = function(params) {
 
     masterWindow.slideOut = function() {
         masterWindow.animate({
-            left : '-' + MASTER_WINDOW_WIDTH
+            left : '-' + MASTER_WINDOW_WIDTH,
+            duration : ANIMATION_DURATION
         }, function() {
 
             if (me.myOrientation === orientations.LANDSCAPE) {
@@ -125,7 +128,7 @@ exports.createSplitWindow = function(params) {
     };
 
     var navButton = Ti.UI.createButton({
-        title : "go"
+        title : ""
     });
 
     navButton.addEventListener('click', navButtonClick);
@@ -142,9 +145,11 @@ exports.createSplitWindow = function(params) {
         }
     };
 
-    if (detailWindow.window) {
-        detailWindow.window.leftNavButton = navButton;
-    }
+    //if (detailWindow.window) {
+    detailWindow.window.leftNavButton = navButton;
+    //} else {
+    //    detailWindow.leftNavButton = navButton;
+    //}
 
     me.addEventListener('open', function() {
         masterWindow.left = 0;
@@ -158,7 +163,12 @@ exports.createSplitWindow = function(params) {
                 right : 1,
                 width : 1
             });
-            masterWindow.add(border);
+            if (masterWindow.addFullScreen) {
+                // shim for XUI
+                masterWindow.addFullScreen(border);
+            } else {
+                masterWindow.add(border);
+            }
             if (masterWindow.window) {
                 masterWindow.width = MASTER_NAVWINDOW_WIDTH;
                 masterWindow.window.width = MASTER_WINDOW_WIDTH;

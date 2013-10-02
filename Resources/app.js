@@ -1,11 +1,11 @@
 Ti.UI.setBackgroundColor('#000');
 
-var masterWindow = Ti.UI.createWindow({
+var masterWindow = require('/ui/xui').createWindow({
     title : 'master example',
     backgroundColor : '#AAA'
 });
 
-var detailWindow = Ti.UI.createWindow({
+var detailWindow = require('/ui/xui').createWindow({
     title : 'detail window',
     backgroundColor : 'white'
 });
