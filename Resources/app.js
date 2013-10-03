@@ -2,7 +2,8 @@ Ti.UI.setBackgroundColor('#000');
 
 var masterWindow = require('/ui/xui').createWindow({
     title : 'master example',
-    backgroundColor : '#AAA'
+    backgroundColor : '#AAA',
+    barColor : 'blue'
 });
 
 var tableData = [];
