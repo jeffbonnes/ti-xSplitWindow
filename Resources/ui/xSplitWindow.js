@@ -145,11 +145,11 @@ exports.createSplitWindow = function(params) {
         }
     };
 
-    //if (detailWindow.window) {
-    detailWindow.window.leftNavButton = navButton;
-    //} else {
-    //    detailWindow.leftNavButton = navButton;
-    //}
+    if (detailWindow.window) {
+        detailWindow.window.leftNavButton = navButton;
+    } else {
+        detailWindow.leftNavButton = navButton;
+    }
 
     me.addEventListener('open', function() {
         masterWindow.left = 0;
