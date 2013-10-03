@@ -38,12 +38,13 @@ exports.createSplitWindow = function(params) {
         }
         masterWindow.left = '-' + MASTER_WINDOW_WIDTH;
         masterWindow.visible = true;
-        clickCatcher.visible = true;
         if (me.myOrientation === orientations.LANDSCAPE) {
             detailWindow.animate({
                 left : MASTER_WINDOW_WIDTH,
                 duration : ANIMATION_DURATION
             });
+        } else {
+            clickCatcher.visible = true;
         }
         masterWindow.animate({
             left : 0,
