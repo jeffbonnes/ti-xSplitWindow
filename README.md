@@ -1,5 +1,5 @@
 # TixSplitView
-A cross platform SplitView that adds some sugar to the Ti.iPad split view to make it more iOS email like.
+A cross platform SplitView that adds some sugar to the Ti.iPad split view to make it more iOS email like. Also works on Android Tablets.
 
 ![demo](https://dl.dropboxusercontent.com/u/843217/xsplitwindow_screen.jpg)
 
