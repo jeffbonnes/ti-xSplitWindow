@@ -1,12 +1,19 @@
+var tracer = require('/lib/tracer');
+var log = tracer.createTracer('xsplitwin');
+log.setLevel(tracer.levels.NONE);
+
 var orientations = {};
 orientations.LANDSCAPE = 'land';
 orientations.PORTRAIT = 'port';
 
 var MASTER_WINDOW_WIDTH = '320dp';
-var MASTER_NAVWINDOW_WIDTH = '321dp';
-var ANIMATION_DURATION = 250;
+var ANIMATION_DURATION = 150;
+var REDRAWING = false;
+var ANIMATING = false;
 
 exports.createSplitWindow = function(params) {
+
+    log.debug('creating SplitWindow');
 
     var me = Ti.UI.createWindow({
         navBarHidden : true,
@@ -21,48 +28,70 @@ exports.createSplitWindow = function(params) {
     var masterWindow = params.masterView;
 
     masterWindow.slideIn = function() {
+        if (REDRAWING) {
+            log.warn('trying to slideIn when already redrawing, exiting');
+            return;
+        }
+        if (ANIMATING) {
+            log.warn('trying to slideIn when already animating, exiting');
+            return;
+        }
         masterWindow.left = '-' + MASTER_WINDOW_WIDTH;
         masterWindow.visible = true;
+        clickCatcher.visible = true;
+        if (me.myOrientation === orientations.LANDSCAPE) {
+            detailWindow.animate({
+                left : MASTER_WINDOW_WIDTH,
+                duration : ANIMATION_DURATION
+            });
+        }
         masterWindow.animate({
             left : 0,
             duration : ANIMATION_DURATION
-        }, function() {
+        });
+        setTimeout(function() {
+            masterWindow.left = 0;
             if (me.myOrientation === orientations.LANDSCAPE) {
                 me.masterShowingLandscape = true;
             } else {
                 me.masterShowingPortrait = true;
                 me.masterShowingLandscape = true;
-                clickCatcher.visible = true;
             }
             navButton.showCorrectImage();
-        });
-        if (me.myOrientation === orientations.LANDSCAPE) {
-            detailWindow.animate({
-                left : MASTER_WINDOW_WIDTH
-            });
-        }
+            ANIMATING = false;
+        }, ANIMATION_DURATION);
     };
 
     masterWindow.slideOut = function() {
+        if (REDRAWING) {
+            log.warn('trying to slideOut when already redrawing, exiting');
+            return;
+        }
+        if (ANIMATING) {
+            log.warn('trying to slideOut when already animating, exiting');
+            return;
+        }
+        if (me.myOrientation === orientations.LANDSCAPE) {
+            detailWindow.animate({
+                left : 0,
+                duration : ANIMATION_DURATION
+            });
+        }
         masterWindow.animate({
             left : '-' + MASTER_WINDOW_WIDTH,
             duration : ANIMATION_DURATION
-        }, function() {
-
+        });
+        setTimeout(function() {
+            masterWindow.left = '-' + MASTER_WINDOW_WIDTH;
+            clickCatcher.visible = false;
+            masterWindow.visible = false;
             if (me.myOrientation === orientations.LANDSCAPE) {
                 me.masterShowingLandscape = false;
-            } else {
-                me.masterShowingPortrait = false;
-                clickCatcher.visible = false;
             }
-            masterWindow.visible = false;
+            me.masterShowingPortrait = false;
             navButton.showCorrectImage();
-        });
-        if (me.myOrientation === orientations.LANDSCAPE) {
-            detailWindow.animate({
-                left : 0
-            });
-        }
+            ANIMATING = false;
+        }, ANIMATION_DURATION)
     };
 
     masterWindow.addEventListener('swipe', function(e) {
@@ -86,31 +115,54 @@ exports.createSplitWindow = function(params) {
     me.myOrientation = "";
 
     me.doRedraw = function() {
+        if (REDRAWING) {
+            log.warn('doRedraw is already redrawing, exiting');
+            return;
+        }
+        REDRAWING = true;
+        log.debug('redrawing');
         if (me.myOrientation === orientations.LANDSCAPE) {
+            log.debug('landscape');
             if (me.masterShowingLandscape) {
+                log.debug('showing master');
                 masterWindow.left = 0;
                 masterWindow.visible = true;
                 detailWindow.left = MASTER_WINDOW_WIDTH;
             } else {
+                log.debug('not showing master');
                 masterWindow.visible = false;
                 detailWindow.left = 0;
             }
             clickCatcher.visible = false;
-        } else if (me.myOrientation === orientations.PORTRAIT) { Array
+        } else if (me.myOrientation === orientations.PORTRAIT) {
+            log.debug('portrait');
+            log.debug('me.masterShowingPortrait=' + me.masterShowingPortrait ? 'true' : 'false');
             masterWindow.visible = me.masterShowingPortrait;
+            log.debug('masterWindow.visible=' + masterWindow.visible);
+            masterWindow.left = 0;
+            log.debug('masterWindow.left=' + masterWindow.left);
             clickCatcher.visible = me.masterShowingPortrait;
             detailWindow.left = 0;
         }
+        log.debug('setting navButton');
         navButton.showCorrectImage();
+        setTimeout(function() {
+            REDRAWING = false
+        }, 500);
     };
 
+    function reDrawWithTimeout() {
+        setTimeout(me.doRedraw, 100);
+    }
+
     function checkForOrientationChange() {
+
         if (Ti.Gesture.isLandscape() && me.myOrientation != orientations.LANDSCAPE) {
             me.myOrientation = orientations.LANDSCAPE;
-            me.doRedraw();
+            reDrawWithTimeout();
         } else if (Ti.Gesture.isPortrait() && me.myOrientation != orientations.PORTRAIT) {
             me.myOrientation = orientations.PORTRAIT;
-            me.doRedraw();
+            reDrawWithTimeout();
         }
     }
 
@@ -123,7 +175,6 @@ exports.createSplitWindow = function(params) {
             }
         } else if (me.myOrientation === orientations.PORTRAIT) {
             masterWindow.slideIn();
-            // TODO Show the ClickCatcher on the detailWindow
         }
     };
 
@@ -160,22 +211,16 @@ exports.createSplitWindow = function(params) {
             checkForOrientationChange();
             var border = Ti.UI.createView({
                 backgroundColor : 'black',
-                right : 1,
+                right : 0,
                 width : 1
             });
             if (masterWindow.addFullScreen) {
                 // shim for XUI
-                masterWindow.addFullScreen(border);
+                masterWindow.addFullScreen(border)
             } else {
                 masterWindow.add(border);
             }
-            if (masterWindow.window) {
-                masterWindow.width = MASTER_NAVWINDOW_WIDTH;
-                masterWindow.window.width = MASTER_WINDOW_WIDTH;
-                masterWindow.window.left = 0;
-            } else {
-                masterWindow.width = MASTER_WINDOW_WIDTH;
-            }
+            masterWindow.width = MASTER_WINDOW_WIDTH;
         });
         detailWindow.open();
         masterWindow.open();
