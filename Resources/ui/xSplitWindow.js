@@ -178,8 +178,9 @@ exports.createSplitWindow = function(params) {
         }
     };
 
-    var navButton = Ti.UI.createButton({
-        title : " "
+    var navButton = Ti.UI.createImageView({
+        height : 40,
+        width : 40
     });
 
     navButton.addEventListener('click', navButtonClick);
